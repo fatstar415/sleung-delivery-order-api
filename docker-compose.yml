@@ -5,10 +5,10 @@ services:
     image: mysql:5.7
     restart: unless-stopped
     environment:
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=pass
-      - MYSQL_ROOT_PASSWORD=rootpass
-      - MYSQL_DATABASE=delivery
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASS}
+      - MYSQL_ROOT_PASSWORD=${DB_PASS}
+      - MYSQL_DATABASE=${DB_NAME}
     ports:
       - '3306:3306'
     volumes:
@@ -21,17 +21,18 @@ services:
     links:
       - db
     ports:
-      - '8080:8080'
+      - '${APP_PORT}:${APP_PORT}'
     expose:
-      - '8080'
+      - '${APP_PORT}'
     environment:
-      - APP_PORT=8080
-      - DB_HOST=mysql_db
-      - DB_USER=root
-      - DB_PASS=rootpass
-      - DB_NAME=delivery
-      - MAX_UPLOAD_SIZE=1048576
-      - GOOGLE_API_KEY=AIzaSyD8ude-PRd-x537MVEiVf3qJhUO19oUA30
+      - APP_PORT=${APP_PORT}
+      - DB_HOST=${DB_HOST}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_NAME=${DB_NAME}
+      - MAX_UPLOAD_SIZE=${MAX_UPLOAD_SIZE}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+    volumes:
       - app-logs:/app/logs
 volumes:
   db-data:
