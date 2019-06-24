@@ -18,6 +18,6 @@ then
   exit $E_BADARGS
 fi
  
-$MYSQL -u root -p -e "$SQL"
+$MYSQL -uroot -p -e "$SQL"
 
 ok "Database $1 and user $2 created with a password $3"

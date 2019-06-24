@@ -1,10 +1,7 @@
 const Joi = require('@hapi/joi');
 const { db, Order } = require('../config/database')
 const logger = require('../config/logger')
-const googleMapsClient = require('@google/maps').createClient({
-  key: process.env.GOOGLE_API_KEY,
-  Promise: Promise
-})
+const gmap = require('@google/maps')
 
 const schema = Joi.object().keys({
   origin: Joi.array().items(Joi.string()).length(2).required(),
@@ -18,35 +15,44 @@ module.exports = (req, res, next) => {
     throw error
   }
   const { origin, destination } = value
-  googleMapsClient.distanceMatrix({
-    origins: [origin],
-    destinations: [destination],
-    mode: 'driving',
-    units: 'metric'
-  }, (err, response) => {
-    if (!err) {
-      const distance = getDistance(response)
-      if (!distance) {
-        throw new Error(`Could not get distance`)
-      }
-      return createOrder(origin, destination, distance)
-        .then((order) => {
-          const { id, distance, status } = order
-          return res.status(200).send({
-            id,
-            distance,
-            status
+  try {
+    const googleMapsClient = gmap.createClient({
+      key: process.env.GOOGLE_API_KEY,
+      Promise: Promise
+    })
+    googleMapsClient.distanceMatrix({
+      origins: [origin],
+      destinations: [destination],
+      mode: 'driving',
+      units: 'metric'
+    }, (err, response) => {
+      if (!err) {
+        const distance = getDistance(response)
+        if (!distance) {
+          throw new Error(`Could not get distance`)
+        }
+        return createOrder(origin, destination, distance)
+          .then((order) => {
+            const { id, distance, status } = order
+            return res.status(200).send({
+              id,
+              distance,
+              status
+            })
           })
-        })
-    } else if (err === 'timeout') {
-      throw new Error(`Get distance timeout`)
-    } else if (err.json) {
-      // Inspect err.status for more info.
-      throw new Error(err.status)
-    } else {
-      throw new Error('Get distance failed')
-    }
-  })
+      } else if (err === 'timeout') {
+        throw new Error(`Get distance timeout`)
+      } else if (err.json) {
+        // Inspect err.status for more info.
+        throw new Error(err.status)
+      } else {
+        throw new Error('Get distance failed')
+      }
+    })
+  } catch (error) {
+    logger.error(error)
+    throw error
+  }
 }
 
 const createOrder = (origin, destination, distance) => {

@@ -22,13 +22,18 @@ db.query(`CREATE DATABASE IF NOT EXISTS ${process.env.DB_NAME};`).then((res) => 
 
 const models = createModels(db)
 
-db.authenticate()
-  .then(() => {
-    console.log('Connection has been established successfully.')
-  })
-  .catch(err => {
-    console.error('Unable to connect to the database:', err)
-  })
+const connectDB = (db) => {
+  return db.authenticate()
+    .then(() => {
+      console.log('Connection has been established successfully.')
+    })
+    .catch(err => {
+      console.error('Unable to connect to the database:', err)
+      return connectDB(db)
+    })
+}
+
+connectDB(db)
 
 db.sync()
 
